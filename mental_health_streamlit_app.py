@@ -2,85 +2,112 @@ import streamlit as st
 import pandas as pd
 import pickle
 from sklearn.preprocessing import LabelEncoder
-from sklearn.preprocessing import StandardScaler
 
 # Load the pre-trained model
 model_filename = 'Mental_Health_Model.sav'
 with open(model_filename, 'rb') as file:
     model = pickle.load(file)
 
-# Load the dataset for symptom selection
-df = pd.read_csv("Mental_Health_Diagnostics_Fixed.csv")
+# Define the symptoms for each disorder
+disorder_symptoms = {
+    "Bipolar I Disorder": [
+        "Manic episodes", "Extreme elation or irritability", "Depressive episodes", 
+        "Irritability and impulsivity", "Increased energy levels", "Sleep disturbances"
+    ],
+    "Schizophrenia": [
+        "Delusions", "Hallucinations", "Disorganized speech", "Impaired cognition", 
+        "Abnormal psychomotor behavior"
+    ],
+    "Autism Spectrum Disorder": [
+        "Impaired social communication", "Difficulty understanding nonverbal cues", 
+        "Repetitive behaviors", "Difficulty with routine daily activities", "Lack of empathy in social situations"
+    ],
+    "Major Depressive Disorder": [
+        "Depressed mood, loss of interest in activities", "Fatigue, changes in sleep patterns", 
+        "Feelings of worthlessness or guilt", "Difficulty concentrating", "Thoughts of death or suicide"
+    ],
+    "Generalized Anxiety Disorder": [
+        "Excessive worry about a variety of topics", "Restlessness and fatigue", "Muscle tension", 
+        "Difficulty relaxing", "Trouble making decisions"
+    ],
+    "Obsessive-Compulsive Disorder": [
+        "Intrusive thoughts and compulsive rituals", "Repetitive behaviors or rituals", 
+        "Preoccupation with cleanliness", "Fear of contamination or harm", "Excessive checking behaviors"
+    ],
+    "Post-Traumatic Stress Disorder": [
+        "Flashbacks, nightmares, emotional numbness", "Avoidance of reminders of the trauma", 
+        "Hypervigilance", "Numbness or detachment from others", "Difficulty sleeping or concentrating"
+    ],
+    "Panic Disorder": [
+        "Heart palpitations, sweating, shaking", "Feeling of choking, chest pain", 
+        "Chills or hot flashes", "Dizziness or lightheadedness", "Sense of impending doom"
+    ],
+    "Attention-Deficit/Hyperactivity Disorder": [
+        "Inattention, difficulty focusing", "Impulsivity, fidgeting", "Forgetfulness, distractibility", 
+        "Difficulty completing tasks", "Impulsivity, reckless behavior"
+    ],
+    "Obsessive-Compulsive Personality Disorder": [
+        "Preoccupation with rules, order, and control", "Reluctance to delegate tasks", 
+        "Perfectionism and inflexibility", "Reluctance to make mistakes", "Overworking and procrastination"
+    ]
+}
 
-# Preprocess the data
+# Streamlit UI for disorder selection and symptom selection
+st.title("Mental Health Disorder Prediction")
+st.write("Select a disorder and symptoms to predict the mental health disorder.")
+
+# Dropdown to select the disorder
+disorder = st.selectbox("Select a Disorder", list(disorder_symptoms.keys()))
+
+# Dropdowns for selecting symptoms, based on the selected disorder
+symptom_options = disorder_symptoms[disorder]
+
+symptom1 = st.selectbox("Symptom 1", symptom_options)
+symptom2 = st.selectbox("Symptom 2", symptom_options)
+symptom3 = st.selectbox("Symptom 3", symptom_options)
+symptom4 = st.selectbox("Symptom 4", symptom_options)
+symptom5 = st.selectbox("Symptom 5", symptom_options)
+
+# Prepare the new symptom data for prediction
+new_symptoms = [symptom1, symptom2, symptom3, symptom4, symptom5]
+
+# Load the dataset for symptom selection
+df = pd.read_csv('Mental_Health_Diagnostics_Fixed.csv')
+
+# Preprocess the data (similar to the way it was done during training)
 X = df.drop(columns=['Disorder', 'Description'])
 y = df['Disorder']
 
-# Encode the labels
+# Encode the labels (this should match the encoding used during training)
 label_encoder = LabelEncoder()
 y_encoded = label_encoder.fit_transform(y)
 
-# If the model was trained with scaling, load the scaler (if applicable)
-# Uncomment the following lines if you used a scaler during training
-# with open('scaler.sav', 'rb') as file:
-#     scaler = pickle.load(file)
-
-# Streamlit UI for symptom selection
-st.title("Mental Health Disorder Prediction")
-st.write("Select symptoms to predict the mental health disorder.")
-
-# Initialize the list to keep track of selected symptoms
-selected_symptoms = []
-
-# Function to update symptom options
-def update_options(symptom_number):
-    available_symptoms = df[f'Symptom {symptom_number}'].unique().tolist()
-    for selected in selected_symptoms:
-        if selected in available_symptoms:
-            available_symptoms.remove(selected)
-    return available_symptoms
-
-# Dropdowns for selecting symptoms with dynamic updates
-symptom1 = st.selectbox("Symptom 1", update_options(1))
-selected_symptoms.append(symptom1)
-
-symptom2 = st.selectbox("Symptom 2", update_options(2))
-selected_symptoms.append(symptom2)
-
-symptom3 = st.selectbox("Symptom 3", update_options(3))
-selected_symptoms.append(symptom3)
-
-symptom4 = st.selectbox("Symptom 4", update_options(4))
-selected_symptoms.append(symptom4)
-
-symptom5 = st.selectbox("Symptom 5", update_options(5))
-selected_symptoms.append(symptom5)
-
-# Ensure that exactly 5 symptoms are selected and align them with the model's expected features
-if len(selected_symptoms) == 5:
-    # Create a dictionary for the selected symptoms, filling the rest of the columns with NaN (or 0 if needed)
-    new_data_dict = {f'Symptom {i+1}': [selected_symptoms[i]] for i in range(5)}
-    
-    # Create the dataframe, ensuring it has the same shape as X (if necessary, you can add more columns for the model to work with)
-    new_data = pd.DataFrame(new_data_dict)
-    
-    # If needed, add dummy features for any missing columns that the model expects
-    missing_columns = [col for col in X.columns if col not in new_data.columns]
-    for col in missing_columns:
-        new_data[col] = 0  # or NaN, depending on how your model was trained
-
-    # Ensure columns match the feature space of the model
-    new_data = new_data[X.columns]  # reorder columns if needed to match training data
-
-    # If the model was trained with scaling, apply the same scaler to the input data
-    # new_data = scaler.transform(new_data)  # Uncomment this line if scaling was used
-
-    # Make the prediction using the loaded model
-    predicted_label = model.predict(new_data)
-    predicted_disorder = label_encoder.inverse_transform(predicted_label)
-
-    # Display the prediction
-    st.write(f"Predicted Disorder: {predicted_disorder[0]}")
+# Ensure the new_symptoms match the number of columns in X
+if len(new_symptoms) == len(X.columns):
+    new_data = pd.DataFrame([new_symptoms], columns=X.columns)
 else:
-    st.write("Please select all 5 symptoms.")
+    st.error(f"Error: Number of symptoms ({len(new_symptoms)}) does not match the number of features ({len(X.columns)}) in the model.")
+    st.stop()
 
+# Check for NaN or infinite values in new_data
+if new_data.isnull().values.any() or not new_data.isfinite().all().all():
+    st.error("Error: Input data contains NaN or infinite values. Please ensure valid input.")
+    st.write("New Data Contains:")
+    st.write(new_data)
+    st.stop()
+
+# Apply label encoding to each symptom column if the model was trained on encoded labels
+encoder = LabelEncoder()
+
+# Label encode the symptoms in new_data
+for col in X.columns:
+    new_data[col] = encoder.fit_transform(new_data[col])
+
+# Make the prediction using the loaded model
+predicted_label = model.predict(new_data)
+
+# Decode the prediction to the original label
+predicted_disorder = label_encoder.inverse_transform(predicted_label)
+
+# Display the prediction
+st.write(f"Predicted Disorder: {predicted_disorder[0]}")
