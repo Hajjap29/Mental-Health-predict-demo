@@ -24,18 +24,16 @@ st.title("Mental Health Disorder Prediction")
 st.write("Select symptoms to predict the mental health disorder.")
 
 # Dropdowns for selecting symptoms
-symptom1 = st.selectbox("Symptom 1", df['Symptom 1'].unique())
-symptom2 = st.selectbox("Symptom 2", df['Symptom 2'].unique())
-symptom3 = st.selectbox("Symptom 3", df['Symptom 3'].unique())
-symptom4 = st.selectbox("Symptom 4", df['Symptom 4'].unique())
-symptom5 = st.selectbox("Symptom 5", df['Symptom 5'].unique())
+symptom_options = df[['Symptom 1', 'Symptom 2', 'Symptom 3', 'Symptom 4', 'Symptom 5']].stack().unique()
+
+symptom1 = st.selectbox("Symptom 1", symptom_options)
+symptom2 = st.selectbox("Symptom 2", symptom_options)
+symptom3 = st.selectbox("Symptom 3", symptom_options)
+symptom4 = st.selectbox("Symptom 4", symptom_options)
+symptom5 = st.selectbox("Symptom 5", symptom_options)
 
 # Prepare the new symptom data for prediction
 new_symptoms = [symptom1, symptom2, symptom3, symptom4, symptom5]
-
-# Check number of features and selected symptoms
-st.write("Features (X.columns):", X.columns)
-st.write("Number of symptoms selected:", len(new_symptoms))
 
 # Ensure the new_symptoms match the number of columns in X
 if len(new_symptoms) == len(X.columns):
@@ -52,6 +50,7 @@ predicted_disorder = label_encoder.inverse_transform(predicted_label)
 
 # Display the prediction
 st.write(f"Predicted Disorder: {predicted_disorder[0]}")
+
 
 
 
