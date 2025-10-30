@@ -8,7 +8,7 @@ with open('Mental_Health_Model.sav', 'rb') as file:
     knn_model = pickle.load(file)
 
 # Load the dataset and extract symptoms
-data = pd.read_csv('/mnt/data/Mental_Health_Diagnostics_Fixed.csv')
+data = pd.read_csv('Mental_Health_Diagnostics_Fixed.csv')
 symptom_columns = ['Symptom 1', 'Symptom 2', 'Symptom 3', 'Symptom 4', 'Symptom 5']
 symptoms = data[symptom_columns].values.flatten()
 symptoms = list(set(symptoms))  # Remove duplicates
