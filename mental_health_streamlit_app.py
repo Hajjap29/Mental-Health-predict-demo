@@ -13,23 +13,88 @@ n_features = knn_model.n_features_in_
 st.write(f"Model expects {n_features} features")
 
 # Load the dataset and extract symptoms
-data = pd.read_csv('Mental_Health_Diagnostics_Fixed.csv')
-symptom_columns = ['Symptom 1', 'Symptom 2', 'Symptom 3', 'Symptom 4', 'Symptom 5']
+try:
+    data = pd.read_csv('Mental_Health_Diagnostics_Fixed.csv')
+    st.success("CSV file loaded successfully!")
+    
+    # Debug: Show the actual column names
+    st.write("**Column names in the CSV:**")
+    st.write(data.columns.tolist())
+    
+    # Debug: Show first few rows
+    st.write("**First 5 rows of data:**")
+    st.dataframe(data.head())
+    
+    # Debug: Show data shape
+    st.write(f"**Data shape:** {data.shape[0]} rows, {data.shape[1]} columns")
+    
+except FileNotFoundError:
+    st.error("CSV file not found! Please check the file path.")
+    st.stop()
+except Exception as e:
+    st.error(f"Error loading CSV: {e}")
+    st.stop()
+
+# **FIX: Adjust column names based on your actual CSV structure**
+# Check what the actual column names are and adjust accordingly
+# Common possibilities:
+possible_symptom_columns = [
+    ['Symptom 1', 'Symptom 2', 'Symptom 3', 'Symptom 4', 'Symptom 5'],
+    ['Symptom1', 'Symptom2', 'Symptom3', 'Symptom4', 'Symptom5'],
+    ['symptom_1', 'symptom_2', 'symptom_3', 'symptom_4', 'symptom_5'],
+    ['Symptom_1', 'Symptom_2', 'Symptom_3', 'Symptom_4', 'Symptom_5'],
+]
+
+# Try to find the correct column names
+symptom_columns = None
+for possible_cols in possible_symptom_columns:
+    if all(col in data.columns for col in possible_cols):
+        symptom_columns = possible_cols
+        st.success(f"Found symptom columns: {symptom_columns}")
+        break
+
+# If no match, let user see all columns and manually specify
+if symptom_columns is None:
+    st.warning("Could not automatically detect symptom columns.")
+    st.write("Please check the column names above and update the code accordingly.")
+    
+    # Try to use any columns that contain 'symptom' (case insensitive)
+    symptom_like_cols = [col for col in data.columns if 'symptom' in col.lower()]
+    
+    if len(symptom_like_cols) >= 5:
+        symptom_columns = symptom_like_cols[:5]
+        st.info(f"Using these columns as symptoms: {symptom_columns}")
+    else:
+        st.error("Cannot find symptom columns. Please update the code with correct column names.")
+        st.stop()
 
 # Flatten the symptoms into a list and remove NaN and duplicates
 symptoms = data[symptom_columns].values.flatten()
 
-# **CRITICAL FIX: Remove NaN values**
-symptoms = [symptom for symptom in symptoms if pd.notna(symptom)]  # Filter out NaN
+st.write(f"**Total symptom entries (including duplicates and NaN):** {len(symptoms)}")
+st.write(f"**Number of NaN values:** {pd.isna(symptoms).sum()}")
+
+# **Remove NaN values**
+symptoms = [symptom for symptom in symptoms if pd.notna(symptom) and symptom != '' and str(symptom).strip() != '']
+st.write(f"**Valid symptom entries after removing NaN:** {len(symptoms)}")
+
 symptoms = list(set(symptoms))  # Remove duplicates
 symptoms.sort()  # Sort for consistency
 
+st.write(f"**Unique valid symptoms:** {len(symptoms)}")
+
 # Check if we have valid symptoms
 if len(symptoms) == 0:
-    st.error("No valid symptoms found in the dataset!")
+    st.error("No valid symptoms found in the dataset after filtering!")
+    st.write("This could mean:")
+    st.write("1. All symptom cells are empty/NaN")
+    st.write("2. The column names are incorrect")
+    st.write("3. The CSV file structure is different than expected")
     st.stop()
 
-st.write(f"Found {len(symptoms)} unique symptoms in the dataset")
+# Show first 20 symptoms for verification
+st.write("**First 20 symptoms:**")
+st.write(symptoms[:20])
 
 # **Fit the LabelEncoder to the symptoms**
 label_encoder = LabelEncoder()
@@ -37,10 +102,6 @@ label_encoder.fit(symptoms)
 
 # Streamlit UI
 st.title('Mental Health Disorder Diagnosis')
-
-# Initialize session state for selected symptoms if not exists
-if 'selected_symptoms' not in st.session_state:
-    st.session_state.selected_symptoms = [None] * 5
 
 # Create dropdowns for symptom selection
 selected_symptoms = []
@@ -64,10 +125,10 @@ for i in range(5):
 # Only proceed if all 5 symptoms are selected
 if len(selected_symptoms) == 5:
     # Show the selected symptoms
-    st.write('You selected the following symptoms:')
+    st.write('**You selected the following symptoms:**')
     st.write(selected_symptoms)
     
-    # **Encode the selected symptoms using the same LabelEncoder**
+    # **Encode the selected symptoms**
     encoded_symptoms = []
     for symptom in selected_symptoms:
         try:
@@ -87,16 +148,15 @@ if len(selected_symptoms) == 5:
                 input_features[0, idx] = encoded_val
     
     # Add a predict button
-    if st.button('Predict Disorder'):
+    if st.button('Predict Disorder', type='primary'):
         try:
-            # Predict the disorder based on the encoded symptoms
+            # Predict the disorder
             prediction = knn_model.predict(input_features)
             
             # Decode the predicted disorder
             disorder_encoder = LabelEncoder()
-            disorder_encoder.fit(data['Disorder'].dropna())  # Also remove NaN from disorders
+            disorder_encoder.fit(data['Disorder'].dropna())
             
-            # Decode the predicted disorder to a readable label
             predicted_disorder = disorder_encoder.inverse_transform(prediction)
             
             # Display the prediction result
@@ -108,11 +168,4 @@ if len(selected_symptoms) == 5:
             st.write("Encoded symptoms:", encoded_symptoms)
 else:
     st.info(f"Please select all 5 symptoms to get a prediction. Currently selected: {len(selected_symptoms)}/5")
-
-# Debug section (optional - can be removed in production)
-with st.expander("Debug Information"):
-    st.write("First 10 symptoms:", symptoms[:10])
-    st.write("Total unique symptoms:", len(symptoms))
-    st.write("Sample data from CSV:")
-    st.dataframe(data.head())
 
