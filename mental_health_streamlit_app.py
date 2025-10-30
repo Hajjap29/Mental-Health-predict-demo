@@ -1,7 +1,7 @@
 import streamlit as st
 import pandas as pd
 import pickle
-from sklearn.preprocessing import LabelEncoder, OneHotEncoder
+from sklearn.preprocessing import LabelEncoder
 
 # Load the pre-trained model
 model_filename = 'Mental_Health_Model.sav'
@@ -9,7 +9,7 @@ with open(model_filename, 'rb') as file:
     model = pickle.load(file)
 
 # Load the dataset for symptom selection
-df = pd.read_csv("Mental_Health_Diagnostics_Fixed.csv")
+df = pd.read_csv('Mental_Health_Diagnostics_Fixed (3).csv')
 
 # Preprocess the data (similar to the way it was done during training)
 X = df.drop(columns=['Disorder', 'Description'])
@@ -23,8 +23,9 @@ y_encoded = label_encoder.fit_transform(y)
 st.title("Mental Health Disorder Prediction")
 st.write("Select symptoms to predict the mental health disorder.")
 
-# Get all unique symptoms across all columns
-symptom_options = df[['Symptom 1', 'Symptom 2', 'Symptom 3', 'Symptom 4', 'Symptom 5']].stack().unique()
+# Get unique symptoms across all symptom columns
+symptom_columns = ['Symptom 1', 'Symptom 2', 'Symptom 3', 'Symptom 4', 'Symptom 5']
+symptom_options = pd.unique(df[symptom_columns].values.ravel())  # Flatten and get unique symptoms
 
 # Dropdowns for selecting symptoms
 symptom1 = st.selectbox("Symptom 1", symptom_options)
@@ -48,21 +49,11 @@ if new_data.isnull().values.any() or not new_data.isfinite().all().all():
     st.error("Error: Input data contains NaN or infinite values. Please ensure valid input.")
     st.stop()
 
-# Optionally: Apply encoding if necessary (e.g., one-hot encoding)
-# Uncomment this block if your model uses one-hot encoding:
-# encoder = OneHotEncoder(sparse=False)
-# encoder.fit(df[['Symptom 1', 'Symptom 2', 'Symptom 3', 'Symptom 4', 'Symptom 5']])
-# new_data_encoded = encoder.transform([new_symptoms])
-
 # Make the prediction using the loaded model
-predicted_label = model.predict(new_data)  # Use new_data_encoded if using one-hot encoding
+predicted_label = model.predict(new_data)
 
 # Decode the prediction to the original label
 predicted_disorder = label_encoder.inverse_transform(predicted_label)
 
 # Display the prediction
 st.write(f"Predicted Disorder: {predicted_disorder[0]}")
-
-
-
-
