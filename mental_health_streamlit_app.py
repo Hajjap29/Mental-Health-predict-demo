@@ -73,7 +73,7 @@ symptom5 = st.selectbox("Symptom 5", symptom_options)
 new_symptoms = [symptom1, symptom2, symptom3, symptom4, symptom5]
 
 # Load the dataset for symptom selection
-df = pd.read_csv('Mental_Health_Diagnostics_Fixed (3).csv')
+df = pd.read_csv('Mental_Health_Diagnostics_Fixed.csv')
 
 # Preprocess the data (similar to the way it was done during training)
 X = df.drop(columns=['Disorder', 'Description'])
