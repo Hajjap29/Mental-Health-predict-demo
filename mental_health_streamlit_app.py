@@ -1,7 +1,7 @@
 import streamlit as st
 import pandas as pd
 import pickle
-from sklearn.preprocessing import LabelEncoder
+from sklearn.preprocessing import LabelEncoder, OneHotEncoder
 
 # Load the pre-trained model
 model_filename = 'Mental_Health_Model.sav'
@@ -11,16 +11,9 @@ with open(model_filename, 'rb') as file:
 # Load the dataset for symptom selection
 df = pd.read_csv("Mental_Health_Diagnostics_Fixed.csv")
 
-# Check the column names in the dataset to ensure that the symptoms are correctly recognized
-st.write("Dataset columns:", df.columns)
-
 # Preprocess the data (similar to the way it was done during training)
-# Make sure to only drop 'Disorder' and 'Description' columns, not the symptom columns.
 X = df.drop(columns=['Disorder', 'Description'])
 y = df['Disorder']
-
-# Check the resulting columns in X
-st.write("Features in X:", X.columns)
 
 # Encode the labels (this should match the encoding used during training)
 label_encoder = LabelEncoder()
@@ -50,8 +43,19 @@ else:
     st.error(f"Error: Number of symptoms ({len(new_symptoms)}) does not match the number of features ({len(X.columns)}) in the model.")
     st.stop()
 
+# Check for NaN or infinite values in new_data
+if new_data.isnull().values.any() or not new_data.isfinite().all().all():
+    st.error("Error: Input data contains NaN or infinite values. Please ensure valid input.")
+    st.stop()
+
+# Optionally: Apply encoding if necessary (e.g., one-hot encoding)
+# Uncomment this block if your model uses one-hot encoding:
+# encoder = OneHotEncoder(sparse=False)
+# encoder.fit(df[['Symptom 1', 'Symptom 2', 'Symptom 3', 'Symptom 4', 'Symptom 5']])
+# new_data_encoded = encoder.transform([new_symptoms])
+
 # Make the prediction using the loaded model
-predicted_label = model.predict(new_data)
+predicted_label = model.predict(new_data)  # Use new_data_encoded if using one-hot encoding
 
 # Decode the prediction to the original label
 predicted_disorder = label_encoder.inverse_transform(predicted_label)
