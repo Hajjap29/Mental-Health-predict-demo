@@ -33,15 +33,16 @@ symptom5 = st.selectbox("Symptom 5", df['Symptom 5'].unique())
 # Prepare the new symptom data for prediction
 new_symptoms = [symptom1, symptom2, symptom3, symptom4, symptom5]
 
-# Ensure the input data shape matches the model input (i.e., number of features)
+# Check number of features and selected symptoms
+st.write("Features (X.columns):", X.columns)
+st.write("Number of symptoms selected:", len(new_symptoms))
+
+# Ensure the new_symptoms match the number of columns in X
 if len(new_symptoms) == len(X.columns):
     new_data = pd.DataFrame([new_symptoms], columns=X.columns)
 else:
-    st.error(f"Error: Number of symptoms does not match the number of features expected by the model.")
+    st.error(f"Error: Number of symptoms ({len(new_symptoms)}) does not match the number of features ({len(X.columns)}) in the model.")
     st.stop()
-
-# Optionally: Apply any preprocessing needed for the input data (e.g., encoding)
-# If the features in X are encoded or transformed (like using one-hot encoding), apply the same transformation here.
 
 # Make the prediction using the loaded model
 predicted_label = model.predict(new_data)
@@ -51,5 +52,6 @@ predicted_disorder = label_encoder.inverse_transform(predicted_label)
 
 # Display the prediction
 st.write(f"Predicted Disorder: {predicted_disorder[0]}")
+
 
 
