@@ -3,6 +3,7 @@ import streamlit as st
 import pandas as pd
 from sklearn.preprocessing import LabelEncoder
 from sklearn.neighbors import KNeighborsClassifier
+from sklearn.metrics import accuracy_score
 
 # Load the dataset
 df = pd.read_csv("Mental_Health_Diagnostics_Fixed.csv")
