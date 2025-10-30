@@ -5,7 +5,7 @@ from sklearn.preprocessing import LabelEncoder
 import numpy as np
 
 # Load the pre-trained model
-model_filename = 'Mental_Health_Model.sav'
+model_filename = '/mnt/data/Mental_Health_Model.sav'
 with open(model_filename, 'rb') as file:
     model = pickle.load(file)
 
@@ -73,7 +73,7 @@ symptom5 = st.selectbox("Symptom 5", symptom_options)
 new_symptoms = [symptom1, symptom2, symptom3, symptom4, symptom5]
 
 # Use the full path to read the uploaded CSV file
-df = pd.read_csv('Mental_Health_Diagnostics_Fixed.csv')
+df = pd.read_csv('/mnt/data/Mental_Health_Diagnostics_Fixed (3).csv')
 
 # Preprocess the data (similar to the way it was done during training)
 X = df.drop(columns=['Disorder', 'Description'])
@@ -90,15 +90,12 @@ else:
     st.error(f"Error: Number of symptoms ({len(new_symptoms)}) does not match the number of features ({len(X.columns)}) in the model.")
     st.stop()
 
-# Check the columns of `new_data` and `X` to ensure they match
-st.write(f"Columns in X (model training data): {X.columns}")
-st.write(f"Columns in new_data: {new_data.columns}")
-
-# Ensure that the order of columns in `new_data` matches the order in `X.columns`
-new_data = new_data[X.columns]
-
 # Check for NaN or infinite values in new_data
-if new_data.isnull().values.any() or np.any(np.isinf(new_data.values)):  # Check for NaN or infinite values in the numpy array
+# We will only check numeric columns for NaN or infinite values
+numeric_columns = new_data.select_dtypes(include=[np.number]).columns
+
+# Check for NaN or infinite values in the numeric columns
+if new_data[numeric_columns].isnull().values.any() or np.any(np.isinf(new_data[numeric_columns].values)):
     st.error("Error: Input data contains NaN or infinite values. Please ensure valid input.")
     st.write("New Data Contains:")
     st.write(new_data)
@@ -119,8 +116,3 @@ predicted_disorder = label_encoder.inverse_transform(predicted_label)
 
 # Display the prediction
 st.write(f"Predicted Disorder: {predicted_disorder[0]}")
-
-
-# Display the prediction
-st.write(f"Predicted Disorder: {predicted_disorder[0]}")
-
