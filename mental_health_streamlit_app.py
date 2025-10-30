@@ -13,7 +13,7 @@ with open(model_filename, 'rb') as file:
 df = pd.read_csv("Mental_Health_Diagnostics_Fixed.csv")
 
 # Preprocess the data
-X = df.drop(columns=['Description', 'Symptom 1', 'Symptom 2', 'Symptom 3', 'Symptom 4', 'Symptom 5'])
+X = df.drop(columns=['Disorder', 'Description', 'Symptom 1', 'Symptom 2', 'Symptom 3', 'Symptom 4', 'Symptom 5'])
 y = df['Disorder']
 
 # Encode the labels
@@ -83,3 +83,4 @@ if len(selected_symptoms) == 5:
     st.write(f"Predicted Disorder: {predicted_disorder[0]}")
 else:
     st.write("Please select all 5 symptoms.")
+
