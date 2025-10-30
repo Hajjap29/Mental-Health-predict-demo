@@ -11,9 +11,16 @@ with open(model_filename, 'rb') as file:
 # Load the dataset for symptom selection
 df = pd.read_csv("Mental_Health_Diagnostics_Fixed.csv")
 
+# Check the column names in the dataset to ensure that the symptoms are correctly recognized
+st.write("Dataset columns:", df.columns)
+
 # Preprocess the data (similar to the way it was done during training)
-X = df.drop(columns=['Disorder', 'Description', 'Symptom 1', 'Symptom 2', 'Symptom 3', 'Symptom 4', 'Symptom 5'])
+# Make sure to only drop 'Disorder' and 'Description' columns, not the symptom columns.
+X = df.drop(columns=['Disorder', 'Description'])
 y = df['Disorder']
+
+# Check the resulting columns in X
+st.write("Features in X:", X.columns)
 
 # Encode the labels (this should match the encoding used during training)
 label_encoder = LabelEncoder()
@@ -23,9 +30,10 @@ y_encoded = label_encoder.fit_transform(y)
 st.title("Mental Health Disorder Prediction")
 st.write("Select symptoms to predict the mental health disorder.")
 
-# Dropdowns for selecting symptoms
+# Get all unique symptoms across all columns
 symptom_options = df[['Symptom 1', 'Symptom 2', 'Symptom 3', 'Symptom 4', 'Symptom 5']].stack().unique()
 
+# Dropdowns for selecting symptoms
 symptom1 = st.selectbox("Symptom 1", symptom_options)
 symptom2 = st.selectbox("Symptom 2", symptom_options)
 symptom3 = st.selectbox("Symptom 3", symptom_options)
