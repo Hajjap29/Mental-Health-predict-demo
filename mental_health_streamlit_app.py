@@ -50,14 +50,16 @@ selected_symptoms.append(symptom4)
 symptom5 = st.selectbox("Symptom 5", update_options(5))
 selected_symptoms.append(symptom5)
 
-# Prepare the new symptom data for prediction
-new_symptoms = selected_symptoms
-new_data = pd.DataFrame([new_symptoms], columns=X.columns)
+# Ensure that exactly 5 symptoms are selected and align them with the model's expected features
+if len(selected_symptoms) == 5:
+    new_data = pd.DataFrame([selected_symptoms], columns=X.columns)
+    
+    # Make the prediction using the loaded model
+    predicted_label = model.predict(new_data)
+    predicted_disorder = label_encoder.inverse_transform(predicted_label)
 
-# Make the prediction using the loaded model
-predicted_label = model.predict(new_data)
-predicted_disorder = label_encoder.inverse_transform(predicted_label)
-
-# Display the prediction
-st.write(f"Predicted Disorder: {predicted_disorder[0]}")
+    # Display the prediction
+    st.write(f"Predicted Disorder: {predicted_disorder[0]}")
+else:
+    st.write("Please select all 5 symptoms.")
 
