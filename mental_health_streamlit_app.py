@@ -72,7 +72,7 @@ symptom5 = st.selectbox("Symptom 5", symptom_options)
 # Prepare the new symptom data for prediction
 new_symptoms = [symptom1, symptom2, symptom3, symptom4, symptom5]
 
-# Load the dataset for symptom selection
+# Use the full path to read the uploaded CSV file
 df = pd.read_csv('Mental_Health_Diagnostics_Fixed.csv')
 
 # Preprocess the data (similar to the way it was done during training)
@@ -91,7 +91,7 @@ else:
     st.stop()
 
 # Check for NaN or infinite values in new_data
-if new_data.isnull().values.any() or np.any(np.isinf(new_data)):
+if new_data.isnull().values.any() or np.any(np.isinf(new_data.values)):  # Check for NaN or infinite values in the numpy array
     st.error("Error: Input data contains NaN or infinite values. Please ensure valid input.")
     st.write("New Data Contains:")
     st.write(new_data)
@@ -112,4 +112,3 @@ predicted_disorder = label_encoder.inverse_transform(predicted_label)
 
 # Display the prediction
 st.write(f"Predicted Disorder: {predicted_disorder[0]}")
-
