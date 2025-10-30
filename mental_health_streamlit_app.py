@@ -1,3 +1,4 @@
+
 import streamlit as st
 import pickle
 import pandas as pd
@@ -80,7 +81,7 @@ disorder_encoder.fit(data['Disorder'].dropna())
 
 # Streamlit UI
 st.title('🧠 Mental Health Disorder Diagnosis')
-st.write('Select 5 symptoms to get a diagnosis prediction based on machine learning.')
+st.write('Select 4 symptoms to get a diagnosis prediction based on machine learning.')
 
 st.divider()
 
@@ -88,7 +89,7 @@ st.divider()
 st.subheader('Select Symptoms')
 selected_symptoms = []
 
-for i in range(5):
+for i in range(4):
     # Filter out already selected symptoms
     available_symptoms = [s for s in all_symptoms_sorted if s not in selected_symptoms]
     
@@ -114,7 +115,7 @@ if len(selected_symptoms) > 0:
         st.write(f"{idx}. {symptom}")
 
 # Prediction section
-if len(selected_symptoms) == 5:
+if len(selected_symptoms) == 4:
     st.divider()
     
     if st.button('🔍 Predict Disorder', type='primary', use_container_width=True):
@@ -145,7 +146,7 @@ if len(selected_symptoms) == 5:
             st.write(f'- Input shape: {input_features.shape}')
             st.write(f'- Model expects: {knn_model.n_features_in_} features')
 else:
-    st.info(f'ℹ️ Please select all 5 symptoms ({len(selected_symptoms)}/5 selected)')
+    st.info(f'ℹ️ Please select all 4 symptoms ({len(selected_symptoms)}/4 selected)')
 
 # Optional: Show available symptoms in expander
 with st.expander('📋 View All Available Symptoms'):
