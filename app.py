@@ -10,13 +10,12 @@ with open('model.pkl', 'rb') as model_file:
     knn_model = pickle.load(model_file)
 
 # Load the data
-df = pd.read_excel('Mental_Health_Diagnostics_Fixed.xlsx')
+df = pd.read_excel('mental_health_diagnostics_comprehensive.xlsx')
 
 # Function to predict the disorder based on selected symptoms
 def predict_disorder(symptoms):
     # Encode the selected symptoms
     symptom_columns = ['Symptom 1', 'Symptom 2', 'Symptom 3', 'Symptom 4', 'Symptom 5']
-    symptom_data = df[symptom_columns].values
     symptom_selected = symptoms
     symptom_encoded = [list(symptom_selected.values())]
     
