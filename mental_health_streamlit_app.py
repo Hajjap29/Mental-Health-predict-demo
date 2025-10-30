@@ -10,12 +10,14 @@ with open('Mental_Health_Model.sav', 'rb') as file:
 # Load the dataset and extract symptoms
 data = pd.read_csv('Mental_Health_Diagnostics_Fixed.csv')
 symptom_columns = ['Symptom 1', 'Symptom 2', 'Symptom 3', 'Symptom 4', 'Symptom 5']
+
+# Flatten the symptoms into a list and remove duplicates
 symptoms = data[symptom_columns].values.flatten()
 symptoms = list(set(symptoms))  # Remove duplicates
 
-# Load label encoder used during model training
+# **Fit the LabelEncoder to the symptoms**
 label_encoder = LabelEncoder()
-label_encoder.fit(data['Disorder'])  # Fit the encoder to the disorder column
+label_encoder.fit(symptoms)  # Fit to all possible symptoms in the dataset (not the 'Disorder' column)
 
 # Streamlit UI
 st.title('Mental Health Disorder Diagnosis')
@@ -33,15 +35,27 @@ for i in range(5):
 st.write('You selected the following symptoms:')
 st.write(selected_symptoms)
 
-# Prepare the selected symptoms as input for the model
-encoded_symptoms = [label_encoder.transform([symptom])[0] for symptom in selected_symptoms]
+# **Encode the selected symptoms using the same LabelEncoder**
+encoded_symptoms = []
+for symptom in selected_symptoms:
+    try:
+        encoded_symptoms.append(label_encoder.transform([symptom])[0])
+    except ValueError as e:
+        st.error(f"Error: {e}")
+        st.stop()  # Stop execution if an unseen symptom is encountered
 
-# Predict the disorder based on the selected symptoms
+# Predict the disorder based on the encoded symptoms
 prediction = knn_model.predict([encoded_symptoms])
 
 # Decode the predicted disorder
-predicted_disorder = label_encoder.inverse_transform(prediction)
+# Assuming you used LabelEncoder on the 'Disorder' column for prediction
+disorder_encoder = LabelEncoder()
+disorder_encoder.fit(data['Disorder'])  # Fit the encoder to the disorder column
+
+# Decode the predicted disorder to a readable label
+predicted_disorder = disorder_encoder.inverse_transform(prediction)
 
 # Display the prediction result
 st.write(f'The predicted disorder based on the selected symptoms is: {predicted_disorder[0]}')
+
 
