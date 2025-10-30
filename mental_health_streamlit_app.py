@@ -24,74 +24,97 @@ y_encoded = label_encoder.fit_transform(y)
 st.title("Mental Health Disorder Prediction")
 st.write("Select symptoms to predict the mental health disorder.")
 
-# Get unique symptoms across all symptom columns
+# Debug: Show dataset info
+st.sidebar.write("Dataset Info:")
+st.sidebar.write(f"Dataset shape: {df.shape}")
+st.sidebar.write(f"Columns: {list(df.columns)}")
+
+# Get unique symptoms across all symptom columns - FIXED APPROACH
 symptom_columns = ['Symptom 1', 'Symptom 2', 'Symptom 3', 'Symptom 4', 'Symptom 5']
-all_symptoms = []
+
+# Check if these columns exist in the dataset
+missing_columns = [col for col in symptom_columns if col not in df.columns]
+if missing_columns:
+    st.error(f"Missing columns in dataset: {missing_columns}")
+    st.write("Available columns:", list(df.columns))
+    st.stop()
+
+# Extract all unique symptoms from the symptom columns
+symptom_options = set()
 for col in symptom_columns:
-    all_symptoms.extend(df[col].dropna().unique())
-symptom_options = sorted(list(set(all_symptoms)))
+    # Get non-null values and add to set
+    symptoms_in_col = df[col].dropna().unique()
+    symptom_options.update(symptoms_in_col)
+
+# Convert to sorted list for dropdown
+symptom_options = sorted(list(symptom_options))
+
+# Debug information
+st.sidebar.write(f"Found {len(symptom_options)} unique symptoms")
+if len(symptom_options) > 0:
+    st.sidebar.write("Sample symptoms:", symptom_options[:5])
+
+# Check if we found any symptoms
+if len(symptom_options) == 0:
+    st.error("No symptoms found in the dataset. Please check your CSV file structure.")
+    st.write("First few rows of dataset:")
+    st.write(df.head())
+    st.stop()
 
 # Dropdowns for selecting symptoms
-symptom1 = st.selectbox("Symptom 1", [""] + symptom_options)
-symptom2 = st.selectbox("Symptom 2", [""] + symptom_options)
-symptom3 = st.selectbox("Symptom 3", [""] + symptom_options)
-symptom4 = st.selectbox("Symptom 4", [""] + symptom_options)
-symptom5 = st.selectbox("Symptom 5", [""] + symptom_options)
+st.subheader("Select Symptoms")
+symptom1 = st.selectbox("Symptom 1", [""] + symptom_options, key="sym1")
+symptom2 = st.selectbox("Symptom 2", [""] + symptom_options, key="sym2") 
+symptom3 = st.selectbox("Symptom 3", [""] + symptom_options, key="sym3")
+symptom4 = st.selectbox("Symptom 4", [""] + symptom_options, key="sym4")
+symptom5 = st.selectbox("Symptom 5", [""] + symptom_options, key="sym5")
 
 # Prepare the new symptom data for prediction
-new_symptoms = [symptom1, symptom2, symptom3, symptom4, symptom5]
+selected_symptoms = [symptom1, symptom2, symptom3, symptom4, symptom5]
+selected_symptoms = [s for s in selected_symptoms if s]  # Remove empty strings
 
-# Filter out empty selections
-new_symptoms = [symptom for symptom in new_symptoms if symptom]
+st.write(f"Selected symptoms: {selected_symptoms}")
 
 # Check if at least one symptom is selected
-if len(new_symptoms) == 0:
-    st.warning("Please select at least one symptom.")
+if len(selected_symptoms) == 0:
+    st.warning("Please select at least one symptom to get a prediction.")
     st.stop()
 
-# Create a DataFrame with all possible symptom columns
-new_data = pd.DataFrame(columns=X.columns)
-
-# Fill with 0s initially
-for col in X.columns:
-    new_data[col] = [0]
-
-# Mark selected symptoms as 1
-for symptom in new_symptoms:
-    if symptom in new_data.columns:
-        new_data[symptom] = [1]
-    else:
-        st.warning(f"Symptom '{symptom}' is not in the training data features.")
-
-# Make sure the column order matches the training data
-new_data = new_data[X.columns]
-
-# Check for NaN or infinite values in new_data
-if new_data.isnull().values.any() or np.any(np.isinf(new_data.values)):
-    st.error("Error: Input data contains NaN or infinite values. Please ensure valid input.")
-    st.stop()
-
-# Make the prediction using the loaded model
+# Create input data for the model
+# We need to create a row that matches the training data format
 try:
-    predicted_label = model.predict(new_data)
+    # Create a DataFrame with zeros for all features
+    input_data = pd.DataFrame(np.zeros((1, len(X.columns))), columns=X.columns)
     
-    # Get prediction probabilities if available
-    if hasattr(model, 'predict_proba'):
-        probabilities = model.predict_proba(new_data)
-        max_prob = np.max(probabilities) * 100
-        st.write(f"Prediction Confidence: {max_prob:.2f}%")
+    # Set 1 for selected symptoms that exist in the features
+    for symptom in selected_symptoms:
+        if symptom in input_data.columns:
+            input_data[symptom] = 1
+        else:
+            st.warning(f"Symptom '{symptom}' is not in the model's feature set.")
     
-    # Decode the prediction to the original label
-    predicted_disorder = label_encoder.inverse_transform(predicted_label)
+    st.sidebar.write("Input data shape:", input_data.shape)
+    st.sidebar.write("Features with value 1:", [col for col in input_data.columns if input_data[col].iloc[0] == 1])
     
-    # Display the prediction
-    st.success(f"Predicted Disorder: **{predicted_disorder[0]}**")
+    # Make prediction
+    prediction = model.predict(input_data)
+    predicted_disorder = label_encoder.inverse_transform(prediction)
+    
+    # Display results
+    st.success(f"**Predicted Disorder: {predicted_disorder[0]}**")
     
     # Show description if available
-    disorder_description = df[df['Disorder'] == predicted_disorder[0]]['Description'].values
-    if len(disorder_description) > 0:
-        st.info(f"Description: {disorder_description[0]}")
+    disorder_info = df[df['Disorder'] == predicted_disorder[0]]
+    if not disorder_info.empty:
+        description = disorder_info['Description'].iloc[0]
+        st.info(f"**Description:** {description}")
+    
+    # Show confidence if available
+    if hasattr(model, 'predict_proba'):
+        probabilities = model.predict_proba(input_data)
+        max_prob = np.max(probabilities) * 100
+        st.metric("Prediction Confidence", f"{max_prob:.1f}%")
         
 except Exception as e:
-    st.error(f"Error making prediction: {str(e)}")
-    st.write("This might be due to mismatched feature dimensions between the training data and new input.")
+    st.error(f"Error during prediction: {str(e)}")
+    st.write("This might indicate a mismatch between the model and input data.")
