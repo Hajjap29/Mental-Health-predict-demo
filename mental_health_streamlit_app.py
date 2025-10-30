@@ -2,6 +2,7 @@ import streamlit as st
 import pandas as pd
 import pickle
 from sklearn.preprocessing import LabelEncoder
+from sklearn.preprocessing import StandardScaler
 
 # Load the pre-trained model
 model_filename = 'Mental_Health_Model.sav'
@@ -18,6 +19,11 @@ y = df['Disorder']
 # Encode the labels
 label_encoder = LabelEncoder()
 y_encoded = label_encoder.fit_transform(y)
+
+# If the model was trained with scaling, load the scaler (if applicable)
+# Uncomment the following lines if you used a scaler during training
+# with open('scaler.sav', 'rb') as file:
+#     scaler = pickle.load(file)
 
 # Streamlit UI for symptom selection
 st.title("Mental Health Disorder Prediction")
@@ -58,13 +64,16 @@ if len(selected_symptoms) == 5:
     # Create the dataframe, ensuring it has the same shape as X (if necessary, you can add more columns for the model to work with)
     new_data = pd.DataFrame(new_data_dict)
     
-    # If needed, add dummy features for any missing columns that the model expects (match the structure of X)
+    # If needed, add dummy features for any missing columns that the model expects
     missing_columns = [col for col in X.columns if col not in new_data.columns]
     for col in missing_columns:
         new_data[col] = 0  # or NaN, depending on how your model was trained
 
     # Ensure columns match the feature space of the model
     new_data = new_data[X.columns]  # reorder columns if needed to match training data
+
+    # If the model was trained with scaling, apply the same scaler to the input data
+    # new_data = scaler.transform(new_data)  # Uncomment this line if scaling was used
 
     # Make the prediction using the loaded model
     predicted_label = model.predict(new_data)
@@ -74,5 +83,3 @@ if len(selected_symptoms) == 5:
     st.write(f"Predicted Disorder: {predicted_disorder[0]}")
 else:
     st.write("Please select all 5 symptoms.")
-
-
