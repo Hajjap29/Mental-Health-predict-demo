@@ -2,6 +2,7 @@ import streamlit as st
 import pandas as pd
 import pickle
 from sklearn.preprocessing import LabelEncoder
+import numpy as np
 
 # Load the pre-trained model
 model_filename = 'Mental_Health_Model.sav'
@@ -72,7 +73,7 @@ symptom5 = st.selectbox("Symptom 5", symptom_options)
 new_symptoms = [symptom1, symptom2, symptom3, symptom4, symptom5]
 
 # Load the dataset for symptom selection
-df = pd.read_csv('Mental_Health_Diagnostics_Fixed.csv')
+df = pd.read_csv('Mental_Health_Diagnostics_Fixed (3).csv')
 
 # Preprocess the data (similar to the way it was done during training)
 X = df.drop(columns=['Disorder', 'Description'])
@@ -90,7 +91,7 @@ else:
     st.stop()
 
 # Check for NaN or infinite values in new_data
-if new_data.isnull().values.any() or not new_data.isfinite().all().all():
+if new_data.isnull().values.any() or np.any(np.isinf(new_data)):
     st.error("Error: Input data contains NaN or infinite values. Please ensure valid input.")
     st.write("New Data Contains:")
     st.write(new_data)
@@ -111,3 +112,4 @@ predicted_disorder = label_encoder.inverse_transform(predicted_label)
 
 # Display the prediction
 st.write(f"Predicted Disorder: {predicted_disorder[0]}")
+
