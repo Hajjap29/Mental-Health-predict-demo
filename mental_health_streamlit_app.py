@@ -1,4 +1,3 @@
-
 import streamlit as st
 import pickle
 import pandas as pd
@@ -126,8 +125,41 @@ if len(selected_symptoms) == 4:
             # Reshape for model input
             input_features = np.array(encoded_symptoms).reshape(1, -1)
             
+            # Debug information
+            with st.expander('🔍 Debug Information (Click to view)'):
+                st.write('**Selected symptoms:**')
+                for i, sym in enumerate(selected_symptoms):
+                    st.write(f'{i+1}. {sym} → Encoded: {encoded_symptoms[i]}')
+                st.write(f'\n**Encoded array:** {encoded_symptoms}')
+                st.write(f'**Input shape:** {input_features.shape}')
+                st.write(f'**Model expects:** {knn_model.n_features_in_} features')
+                
+                # Check if we need padding or different encoding
+                if knn_model.n_features_in_ != 4:
+                    st.warning(f'⚠️ Feature mismatch! Model expects {knn_model.n_features_in_} features but we have 4')
+            
+            # Check if model expects different number of features
+            if knn_model.n_features_in_ == 5:
+                # Pad with a default value (e.g., -1 or 0)
+                st.info('Model expects 5 features, padding with 0 for the 5th feature')
+                input_features = np.pad(input_features, ((0, 0), (0, 1)), constant_values=0)
+            
             # Make prediction
             prediction = knn_model.predict(input_features)
+            
+            # Get prediction probabilities if available
+            try:
+                if hasattr(knn_model, 'predict_proba'):
+                    probabilities = knn_model.predict_proba(input_features)[0]
+                    
+                    with st.expander('📊 Prediction Confidence'):
+                        prob_df = pd.DataFrame({
+                            'Disorder': disorder_encoder.classes_,
+                            'Probability': probabilities
+                        }).sort_values('Probability', ascending=False)
+                        st.dataframe(prob_df, use_container_width=True)
+            except:
+                pass
             
             # Decode the prediction
             predicted_disorder = disorder_encoder.inverse_transform(prediction)[0]
@@ -142,12 +174,19 @@ if len(selected_symptoms) == 4:
             st.error(f'❌ Prediction Error: {str(e)}')
             st.write('Debug Info:')
             st.write(f'- Selected symptoms: {selected_symptoms}')
-            st.write(f'- Encoded values: {encoded_symptoms.tolist()}')
-            st.write(f'- Input shape: {input_features.shape}')
+            if 'encoded_symptoms' in locals():
+                st.write(f'- Encoded values: {encoded_symptoms.tolist()}')
+            if 'input_features' in locals():
+                st.write(f'- Input shape: {input_features.shape}')
             st.write(f'- Model expects: {knn_model.n_features_in_} features')
 else:
     st.info(f'ℹ️ Please select all 4 symptoms ({len(selected_symptoms)}/4 selected)')
 
+# Optional: Show available symptoms in expander
+with st.expander('📋 View All Available Symptoms'):
+    st.write(f'Total symptoms in database: {len(all_symptoms_sorted)}')
+    for symptom in all_symptoms_sorted:
+        st.write(f'• {symptom}')
 # Optional: Show available symptoms in expander
 with st.expander('📋 View All Available Symptoms'):
     st.write(f'Total symptoms in database: {len(all_symptoms_sorted)}')
