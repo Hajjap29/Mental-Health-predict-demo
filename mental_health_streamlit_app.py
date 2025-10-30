@@ -4,7 +4,7 @@ import pickle
 from sklearn.preprocessing import LabelEncoder
 
 # Load the pre-trained model
-model_filename = '/mnt/data/Mental_Health_Model.sav'
+model_filename = 'Mental_Health_Model.sav'
 with open(model_filename, 'rb') as file:
     model = pickle.load(file)
 
