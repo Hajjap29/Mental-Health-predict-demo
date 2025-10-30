@@ -9,7 +9,7 @@ with open(model_filename, 'rb') as file:
     model = pickle.load(file)
 
 # Load the dataset for symptom selection
-df = pd.read_csv('Mental_Health_Diagnostics_Fixed (3).csv')
+df = pd.read_csv('Mental_Health_Diagnostics_Fixed.csv')
 
 # Preprocess the data (similar to the way it was done during training)
 X = df.drop(columns=['Disorder', 'Description'])
