@@ -13,7 +13,7 @@ with open(model_filename, 'rb') as file:
 df = pd.read_csv("Mental_Health_Diagnostics_Fixed.csv")
 
 # Preprocess the data
-X = df.drop(columns=['Disorder', 'Description', 'Symptom 1', 'Symptom 2', 'Symptom 3', 'Symptom 4', 'Symptom 5'])
+X = df.drop(columns=['Disorder', 'Description'])
 y = df['Disorder']
 
 # Encode the labels
