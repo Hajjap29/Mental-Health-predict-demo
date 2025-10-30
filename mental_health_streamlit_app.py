@@ -8,14 +8,14 @@ model_filename = 'Mental_Health_Model.sav'
 with open(model_filename, 'rb') as file:
     model = pickle.load(file)
 
-# Load the dataset for symptom selection (you can adjust if you have a different CSV)
+# Load the dataset for symptom selection
 df = pd.read_csv("Mental_Health_Diagnostics_Fixed.csv")
 
-# Preprocess the data (similar to the way it was done during training)
+# Preprocess the data
 X = df.drop(columns=['Disorder', 'Description', 'Symptom 1', 'Symptom 2', 'Symptom 3', 'Symptom 4', 'Symptom 5'])
 y = df['Disorder']
 
-# Encode the labels (this should match the encoding used during training)
+# Encode the labels
 label_encoder = LabelEncoder()
 y_encoded = label_encoder.fit_transform(y)
 
@@ -23,15 +23,35 @@ y_encoded = label_encoder.fit_transform(y)
 st.title("Mental Health Disorder Prediction")
 st.write("Select symptoms to predict the mental health disorder.")
 
-# Dropdowns for selecting symptoms
-symptom1 = st.selectbox("Symptom 1", df['Symptom 1'].unique())
-symptom2 = st.selectbox("Symptom 2", df['Symptom 2'].unique())
-symptom3 = st.selectbox("Symptom 3", df['Symptom 3'].unique())
-symptom4 = st.selectbox("Symptom 4", df['Symptom 4'].unique())
-symptom5 = st.selectbox("Symptom 5", df['Symptom 5'].unique())
+# Initialize the list to keep track of selected symptoms
+selected_symptoms = []
+
+# Function to update symptom options
+def update_options(symptom_number):
+    available_symptoms = df[f'Symptom {symptom_number}'].unique().tolist()
+    for selected in selected_symptoms:
+        if selected in available_symptoms:
+            available_symptoms.remove(selected)
+    return available_symptoms
+
+# Dropdowns for selecting symptoms with dynamic updates
+symptom1 = st.selectbox("Symptom 1", update_options(1))
+selected_symptoms.append(symptom1)
+
+symptom2 = st.selectbox("Symptom 2", update_options(2))
+selected_symptoms.append(symptom2)
+
+symptom3 = st.selectbox("Symptom 3", update_options(3))
+selected_symptoms.append(symptom3)
+
+symptom4 = st.selectbox("Symptom 4", update_options(4))
+selected_symptoms.append(symptom4)
+
+symptom5 = st.selectbox("Symptom 5", update_options(5))
+selected_symptoms.append(symptom5)
 
 # Prepare the new symptom data for prediction
-new_symptoms = [symptom1, symptom2, symptom3, symptom4, symptom5]
+new_symptoms = selected_symptoms
 new_data = pd.DataFrame([new_symptoms], columns=X.columns)
 
 # Make the prediction using the loaded model
@@ -40,3 +60,4 @@ predicted_disorder = label_encoder.inverse_transform(predicted_label)
 
 # Display the prediction
 st.write(f"Predicted Disorder: {predicted_disorder[0]}")
+
