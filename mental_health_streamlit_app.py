@@ -90,12 +90,15 @@ else:
     st.error(f"Error: Number of symptoms ({len(new_symptoms)}) does not match the number of features ({len(X.columns)}) in the model.")
     st.stop()
 
-# Check for NaN or infinite values in new_data
-# We will only check numeric columns for NaN or infinite values
-numeric_columns = new_data.select_dtypes(include=[np.number]).columns
+# Check the columns of `new_data` and `X` to ensure they match
+st.write(f"Columns in X (model training data): {X.columns}")
+st.write(f"Columns in new_data: {new_data.columns}")
 
-# Check for NaN or infinite values in the numeric columns
-if new_data[numeric_columns].isnull().values.any() or np.any(np.isinf(new_data[numeric_columns].values)):
+# Ensure that the order of columns in `new_data` matches the order in `X.columns`
+new_data = new_data[X.columns]
+
+# Check for NaN or infinite values in new_data
+if new_data.isnull().values.any() or np.any(np.isinf(new_data.values)):  # Check for NaN or infinite values in the numpy array
     st.error("Error: Input data contains NaN or infinite values. Please ensure valid input.")
     st.write("New Data Contains:")
     st.write(new_data)
@@ -113,6 +116,10 @@ predicted_label = model.predict(new_data)
 
 # Decode the prediction to the original label
 predicted_disorder = label_encoder.inverse_transform(predicted_label)
+
+# Display the prediction
+st.write(f"Predicted Disorder: {predicted_disorder[0]}")
+
 
 # Display the prediction
 st.write(f"Predicted Disorder: {predicted_disorder[0]}")
