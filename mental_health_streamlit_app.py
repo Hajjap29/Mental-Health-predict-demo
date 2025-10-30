@@ -5,7 +5,7 @@ from sklearn.preprocessing import LabelEncoder
 import numpy as np
 
 # Load the pre-trained model
-model_filename = '/mnt/data/Mental_Health_Model.sav'
+model_filename = 'Mental_Health_Model.sav'
 with open(model_filename, 'rb') as file:
     model = pickle.load(file)
 
@@ -73,7 +73,7 @@ symptom5 = st.selectbox("Symptom 5", symptom_options)
 new_symptoms = [symptom1, symptom2, symptom3, symptom4, symptom5]
 
 # Use the full path to read the uploaded CSV file
-df = pd.read_csv('/mnt/data/Mental_Health_Diagnostics_Fixed (3).csv')
+df = pd.read_csv('Health_Diagnostics_Fixed.csv')
 
 # Preprocess the data (similar to the way it was done during training)
 X = df.drop(columns=['Disorder', 'Description'])
