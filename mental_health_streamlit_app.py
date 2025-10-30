@@ -1,7 +1,7 @@
 import streamlit as st
 import pandas as pd
 import pickle
-from sklearn.preprocessing import LabelEncoder
+from sklearn.preprocessing import LabelEncoder, OneHotEncoder
 
 # Load the pre-trained model
 model_filename = 'Mental_Health_Model.sav'
@@ -47,7 +47,20 @@ else:
 # Check for NaN or infinite values in new_data
 if new_data.isnull().values.any() or not new_data.isfinite().all().all():
     st.error("Error: Input data contains NaN or infinite values. Please ensure valid input.")
+    st.write("New Data Contains:")
+    st.write(new_data)
     st.stop()
+
+# Optionally: Apply encoding if necessary (e.g., one-hot encoding)
+# Assuming the model was trained with label encoding or one-hot encoding
+# If the model was trained using label encoding on each symptom column, you should encode the new symptoms similarly
+
+# Example of Label Encoding for each symptom column
+encoder = LabelEncoder()
+
+# Label encode the symptoms in new_data
+for col in X.columns:
+    new_data[col] = encoder.fit_transform(new_data[col])
 
 # Make the prediction using the loaded model
 predicted_label = model.predict(new_data)
